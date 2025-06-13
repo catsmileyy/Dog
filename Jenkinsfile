@@ -37,19 +37,30 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo 'Deploying to IIS...'
-                powershell '''
-                    Import-Module WebAdministration
-                    if (-not (Test-Path IIS:\\Sites\\MySite)) {
-                        New-Website -Name "MySite" -Port 81 -PhysicalPath "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish"
-                    } else {
-                        Set-ItemProperty IIS:\\Sites\\MySite -Name physicalPath -Value "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish"
-                        Restart-WebAppPool -Name "MySite"
+                stage('Deploy') {
+                    steps {
+                        echo 'Deploying to IIS...'
+                        powershell '''
+                            Import-Module WebAdministration
+
+                            # Create application pool if it doesn't exist
+                            if (-not (Test-Path IIS:\\AppPools\\MySite)) {
+                                New-WebAppPool -Name "MySite"
+                            }
+
+                            # Ensure site exists
+                            if (-not (Test-Path IIS:\\Sites\\MySite)) {
+                                New-Website -Name "MySite" -Port 81 -PhysicalPath "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish" -ApplicationPool "MySite"
+                            } else {
+                                Set-ItemProperty IIS:\\Sites\\MySite -Name physicalPath -Value "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish"
+                                Set-ItemProperty IIS:\\Sites\\MySite -Name applicationPool -Value "MySite"
+                            }
+
+                            # Restart the app pool safely
+                            Restart-WebAppPool -Name "MySite"
+                        '''
                     }
-                '''
-            }
-        }
+                }
+
     }
 }
