@@ -33,7 +33,7 @@ pipeline {
         stage('Publish') {
             steps {
                 echo 'Publishing project...'
-                bat 'dotnet publish -c Release -o ./publish'
+                bat 'dotnet publish -c Release -o ./publish -p:UseAppHost=true -p:PublishProtocol=FileSystem'
             }
         }
 
@@ -44,10 +44,12 @@ pipeline {
                     Import-Module WebAdministration
                     if (-not (Test-Path IIS:\\Sites\\MySite)) {
                         New-Website -Name "MySite" -Port 81 -PhysicalPath "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish"
+                    } else {
+                        Set-ItemProperty IIS:\\Sites\\MySite -Name physicalPath -Value "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\Dogg\\publish"
+                        Restart-WebAppPool -Name "MySite"
                     }
                 '''
             }
         }
-
     }
 }
