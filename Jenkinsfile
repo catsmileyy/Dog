@@ -40,13 +40,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying to IIS...'
-                powershell '''
+                powershell """
                     Import-Module WebAdministration
                     if (-not (Test-Path IIS:\\Sites\\MySite)) {
-                        New-Website -Name "MySite" -Port 81 -PhysicalPath "C:\ProgramData\Jenkins\.jenkins\workspace\Dogg\publish"
-"
+                        New-Website -Name "MySite" -Port 81 -PhysicalPath "${env.WORKSPACE}/publish"
                     }
-                '''
+                """
             }
         }
     }
