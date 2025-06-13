@@ -9,12 +9,7 @@ pipeline {
             }
         }
 
-        stage('Restore Packages') {
-            steps {
-                echo 'Restoring packages...'
-                bat 'dotnet restore'
-            }
-        }
+        tou
 
         stage('Build') {
             steps {
