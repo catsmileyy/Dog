@@ -4,12 +4,17 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                echo 'Cloning source code...'
+                echo 'Cloning source code'
                 git branch: 'main', url: 'https://github.com/catsmileyy/Dog.git'
             }
         }
 
-        tou
+        stage('Restore packages') {
+            steps {
+                echo 'Restoring packages...'
+                bat 'dotnet restore'
+            }
+        }
 
         stage('Build') {
             steps {
@@ -25,27 +30,21 @@ pipeline {
             }
         }
 
-        stage('Publish to Folder') {
+        stage('Publish') {
             steps {
-                echo 'Publishing to ./publish folder...'
+                echo 'Publishing project...'
                 bat 'dotnet publish -c Release -o ./publish'
             }
         }
 
-        stage('Copy to IIS Folder') {
+        stage('Deploy') {
             steps {
-                echo 'Copying to IIS folder...'
-                bat 'xcopy "%WORKSPACE%\\publish" /E /Y /I /R "C:\\wwwroot\\DogProject"'
-            }
-        }
-
-        stage('Deploy to IIS') {
-            steps {
+                echo 'Deploying to IIS...'
                 powershell '''
-                Import-Module WebAdministration
-                if (-not (Test-Path IIS:\\Sites\\DogSite)) {
-                    New-Website -Name "DogSite" -Port 81 -PhysicalPath "C:\\wwwroot\\DogProject"
-                }
+                    Import-Module WebAdministration
+                    if (-not (Test-Path IIS:\\Sites\\MySite)) {
+                        New-Website -Name "MySite" -Port 81 -PhysicalPath "C:\\wwwroot\\myproject"
+                    }
                 '''
             }
         }
